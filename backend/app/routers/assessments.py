@@ -47,6 +47,10 @@ def start_assessment(
     if req.level_num < 1 or req.level_num > 10:
         raise HTTPException(status_code=400, detail="Level must be between 1 and 10")
 
+    # Reset transaction snapshot and acquire pessimistic row-level lock on student record for concurrency safety
+    db.commit()
+    db.query(User).filter(User.id == student.id).with_for_update().first()
+
     # Fetch all 30 questions for selected level
     all_level_questions = db.query(Question).filter(Question.level_num == req.level_num).all()
     if len(all_level_questions) < 2:
@@ -67,8 +71,7 @@ def start_assessment(
         db.query(StudentAttempt).filter(
             StudentAttempt.student_id == student.id,
             StudentAttempt.level_num == req.level_num
-        ).delete()
-        db.commit()
+        ).delete(synchronize_session=False)
         unused_questions = all_level_questions
 
     # Randomly select 2 questions

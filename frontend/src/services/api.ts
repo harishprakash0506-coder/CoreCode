@@ -25,6 +25,39 @@ export interface QuestionAdmin {
   sample_test_cases: { id: number; input_data: string; expected_output: string; is_sample: boolean }[];
 }
 
+export interface TestCasePublic {
+  id: number;
+  input_data: string;
+  expected_output: string;
+  is_sample: boolean;
+}
+
+export interface AssessmentQuestion {
+  question_id: string;
+  level_num: number;
+  level_name: string;
+  topic?: string;
+  difficulty?: string;
+  title: string;
+  problem_statement: string;
+  input_format?: string;
+  output_format?: string;
+  supported_languages?: string;
+  question_max_marks: number;
+  sample_test_cases: TestCasePublic[];
+}
+
+export interface AssessmentSession {
+  assessment_id: string;
+  student_id: number;
+  level_num: number;
+  started_at: string;
+  expires_at: string;
+  remaining_seconds: number;
+  status: string;
+  questions: AssessmentQuestion[];
+}
+
 export const api = {
   getToken: () => localStorage.getItem('token'),
 
@@ -95,11 +128,16 @@ export const api = {
     return this.fetch('/student/history');
   },
 
-  async startAssessment(level_num: number) {
+  async startAssessment(level_num: number): Promise<AssessmentSession> {
     return this.fetch('/assessments/start', {
       method: 'POST',
       body: JSON.stringify({ level_num }),
     });
+  },
+
+  async getAssessmentSession(assessment_id: string): Promise<AssessmentSession> {
+    return this.fetch(`/assessments/${assessment_id}`);
   }
 };
+
 
