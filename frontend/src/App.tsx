@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ProtectedRoute, AdminRoute } from './components/ProtectedRoute';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { AssessmentPage } from './pages/AssessmentPage';
 import { StudentDashboard } from './components/StudentDashboard';
 import { StudentNavbar } from './components/StudentNavbar';
 import { AdminDashboard } from './components/AdminDashboard';
@@ -85,6 +86,7 @@ export const App: React.FC = () => (
           <Route path="/student/dashboard" element={<StudentLayout activeTab="dashboard" />} />
           <Route path="/student/history" element={<StudentLayout activeTab="history" />} />
           <Route path="/student/profile" element={<StudentLayout activeTab="profile" />} />
+          <Route path="/student/assessment/:assessmentId" element={<AssessmentPage />} />
         </Route>
 
         {/* Admin protected routes */}

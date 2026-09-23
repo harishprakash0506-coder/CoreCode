@@ -93,5 +93,13 @@ export const api = {
 
   async getStudentHistory() {
     return this.fetch('/student/history');
+  },
+
+  async startAssessment(level_num: number) {
+    return this.fetch('/assessments/start', {
+      method: 'POST',
+      body: JSON.stringify({ level_num }),
+    });
   }
 };
+

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { 
   Award, Play, Sparkles, Layers
@@ -10,9 +11,13 @@ interface Props {
 }
 
 export const StudentDashboard: React.FC<Props> = ({ user, activeTab }) => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<any>(null);
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [startingLevel, setStartingLevel] = useState<number | null>(null);
+  const [startSuccess, setStartSuccess] = useState<string | null>(null);
+  const [startError, setStartError] = useState<string | null>(null);
 
   const levelInfo = [
     { num: 1, title: 'Input/Output & Conditionals', topic: 'Operators, if/else, switch', color: 'from-blue-500 to-indigo-600' },
@@ -45,6 +50,31 @@ export const StudentDashboard: React.FC<Props> = ({ user, activeTab }) => {
       setLoading(false);
     }
   };
+
+  const handleStartAssessment = async (levelNum: number) => {
+    if (startingLevel !== null) return;
+    setStartingLevel(levelNum);
+    setStartSuccess(null);
+    setStartError(null);
+
+    try {
+      const data = await api.startAssessment(levelNum);
+      console.log('Assessment session created successfully:', data);
+      
+      const assessmentId = data.assessment_id || data.id;
+      if (assessmentId) {
+        navigate(`/student/assessment/${assessmentId}`);
+      } else {
+        setStartSuccess(`Assessment session for Level ${levelNum} created successfully!`);
+      }
+    } catch (err: any) {
+      console.error('Failed to start assessment:', err);
+      setStartError(err.message || `Failed to start Level ${levelNum} assessment.`);
+    } finally {
+      setStartingLevel(null);
+    }
+  };
+
 
   if (loading) {
     return (
@@ -165,6 +195,21 @@ export const StudentDashboard: React.FC<Props> = ({ user, activeTab }) => {
         </div>
       </div>
 
+      {/* Success / Error Notification Banners */}
+      {startSuccess && (
+        <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-sm flex items-center justify-between">
+          <span>{startSuccess}</span>
+          <button onClick={() => setStartSuccess(null)} className="text-emerald-400 hover:text-emerald-200 font-bold ml-4">✕</button>
+        </div>
+      )}
+
+      {startError && (
+        <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-sm flex items-center justify-between">
+          <span>{startError}</span>
+          <button onClick={() => setStartError(null)} className="text-rose-400 hover:text-rose-200 font-bold ml-4">✕</button>
+        </div>
+      )}
+
       {/* Level Selection Grid */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -210,11 +255,27 @@ export const StudentDashboard: React.FC<Props> = ({ user, activeTab }) => {
                   </div>
 
                   <button
-                    onClick={() => alert(`Phase 1 verification active. Ready to launch Level ${l.num} Assessment session in Phase 2.`)}
-                    className="w-full py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition-all flex items-center justify-center gap-1.5 shadow-md shadow-indigo-600/20"
+                    onClick={() => handleStartAssessment(l.num)}
+                    disabled={startingLevel !== null}
+                    className={`w-full py-2.5 px-3 rounded-xl font-semibold text-xs transition-all flex items-center justify-center gap-1.5 shadow-md ${
+                      startingLevel === l.num
+                        ? 'bg-indigo-800 text-indigo-300 cursor-not-allowed'
+                        : startingLevel !== null
+                        ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                        : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/20'
+                    }`}
                   >
-                    <Play className="w-3.5 h-3.5 fill-current" />
-                    Start Assessment
+                    {startingLevel === l.num ? (
+                      <>
+                        <div className="w-3.5 h-3.5 border-2 border-indigo-300 border-t-transparent rounded-full animate-spin"></div>
+                        Starting...
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-3.5 h-3.5 fill-current" />
+                        Start Assessment
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -225,3 +286,4 @@ export const StudentDashboard: React.FC<Props> = ({ user, activeTab }) => {
     </div>
   );
 };
+
