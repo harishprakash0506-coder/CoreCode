@@ -34,11 +34,11 @@ export const StudentDashboard: React.FC<Props> = ({ user, activeTab }) => {
   const loadData = async () => {
     try {
       const [sData, hData] = await Promise.all([
-        api.getStudentDashboardStats(),
-        api.getStudentHistory(),
+        api.getStudentDashboardStats().catch(() => null),
+        api.getStudentHistory().catch(() => []),
       ]);
       setStats(sData);
-      setHistory(hData);
+      setHistory(Array.isArray(hData) ? hData : []);
     } catch (err) {
       console.error('Failed to load student dashboard stats', err);
     } finally {
